@@ -58,7 +58,7 @@ export default class Observer {
    * @param {Store} store
    */
   static createFactory(store) {
-    if (!store instanceof AbstractStore) {
+    if (!(store instanceof AbstractStore)) {
       throw Error('store is not an instance of AbstractStore');
     }
     return (...args) => Observer.create(...args, store);
@@ -118,7 +118,7 @@ export default class Observer {
     return this.store.remove(this.lastSyncStorageKey);
   }
 
-  addCollectionListener(timestamp) {
+  async addCollectionListener(timestamp) {
     if (this.unsubscribeToken) {
       console.warn('Listener is already subscribed.');
       return false;
@@ -139,7 +139,7 @@ export default class Observer {
       .onSnapshot(callback, error);
   }
 
-  collectionListenerCallback(err, snapshot) {
+  async collectionListenerCallback(err, snapshot) {
     if (err) {
       throw err;
     }
