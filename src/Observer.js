@@ -1,5 +1,5 @@
 import EventEmitter from './EventEmitter';
-import AbstractStore from './AbstractStore';
+import DefaultStore from './DefaultStore';
 
 const ChangeType = {
   ADDED: 'added',
@@ -12,25 +12,6 @@ const Event = {
   DOCUMENT_REMOVED: 'DOCUMENT_REMOVED',
   DOCUMENT_UPDATED: 'DOCUMENT_UPDATED',
 };
-
-class DefaultStore extends AbstractStore {
-  constructor(key) {
-    super(key);
-    this.storage = window.localStorage;
-  }
-
-  async get() {
-    return JSON.parse(this.storage.getItem(this.key));
-  }
-
-  async set(data) {
-    return this.storage.setItem(this.key, JSON.stringify(data));
-  }
-
-  async remove(data) {
-    return this.storage.removeItem(this.key, data);
-  }
-}
 
 export default class Observer {
   unsubscribeToken = null;
@@ -93,21 +74,25 @@ export default class Observer {
   }
 
   /**
-   * Start observing a collection query.
+   * Start observing a query.
    * @public
    * @async
    */
   async connect() {
     const timestamp = await this.getLastSyncTimestamp();
-    return this.addCollectionListener(timestamp);
+
+    //  If an error occrus the listener will not receive any more events.
+    return this.addQueryListener(timestamp, err => {
+      throw err;
+    });
   }
 
   /**
-   * Stop observing a collection query.
+   * Stop observing a query.
    * @public
    */
   disconnect() {
-    this.removeCollectionListener();
+    this.removeQueryListener();
   }
 
   /**
@@ -115,35 +100,31 @@ export default class Observer {
    * @public
    */
   clearLastSyncTimestamp() {
-    return this.store.remove(this.lastSyncStorageKey);
+    return this.store.remove();
   }
 
-  addCollectionListener(timestamp) {
+  addQueryListener(timestamp, errorCallback) {
     if (this.unsubscribeToken) {
       console.warn('Listener is already subscribed.');
       return false;
     }
-    this.unsubscribeToken = this.onCollectionSnapshot(timestamp, (snapshot) => {
+    this.unsubscribeToken = this.onQuerySnapshot(timestamp, async (snapshot) => {
       try {
-        return this.collectionListenerCallback(null, snapshot);
-      } catch (err) {
-        this.collectionListenerCallback(err);
+        await this.collectionListenerCallback(snapshot);
+      } catch(err) {
+        return errorCallback(err);
       }
-    }, this.collectionListenerCallback);
+    }, errorCallback);
     return this.unsubscribeToken;
   }
 
-  onCollectionSnapshot(timestamp, callback, error) {
+  onQuerySnapshot(timestamp, callback, errorCallback) {
     return this.collectionRef
       .where(this.lastUpdatedField, '>', timestamp)
-      .onSnapshot(callback, error);
+      .onSnapshot(callback, errorCallback);
   }
 
-  async collectionListenerCallback(err, snapshot) {
-    if (err) {
-      throw err;
-    }
-
+  async collectionListenerCallback(snapshot) {
     if (!snapshot) {
       throw Error('No snapshot in windows listener');
     }
@@ -179,7 +160,7 @@ export default class Observer {
     }
   }
 
-  removeCollectionListener() {
+  removeQueryListener() {
     if (!this.unsubscribeToken) {
       console.warn('No unsubcribe token');
       return;
@@ -189,11 +170,11 @@ export default class Observer {
   }
 
   async getLastSyncTimestamp() {
-    const data = this.store.get(this.lastSyncStorageKey);
+    const data = this.store.get();
     if (!data) {
       return this.firestore.Timestamp.fromDate(new Date(1900, 1, 1));
     }
-    const { seconds, nanoseconds } = JSON.parse(data)
+    const { seconds, nanoseconds } = data;
     return new this.firestore.Timestamp(seconds, nanoseconds).toDate();
   }
 
@@ -201,6 +182,6 @@ export default class Observer {
     if (!timestamp) {
       throw Error('Missing required argument: timestamp');
     }
-    return this.store(this.lastSyncStorageKey, timestamp);
+    return this.store(timestamp);
   }
 }
