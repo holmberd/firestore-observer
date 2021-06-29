@@ -35,6 +35,15 @@ class DefaultStore extends AbstractStore {
 export default class Observer {
   unsubscribeToken = null;
 
+/**
+ * @constructor
+ * @param {Firestore} firestore
+ * @param {CollectionReference} collectionRef
+ * @param {string} lastUpdatedField - Document last updated field key.
+ * @param {string} storeKey - Store key for last sync timestamp.
+ * @param {Store} [store] - Last sync timestamp store instance, defaults to localstorage.
+ * @returns {Observer}
+ */
   constructor(firestore, collectionRef, lastUpdatedField, storeKey, store = new DefaultStore(storeKey)) {
     this.store = store;
     this.events = new EventEmitter();
@@ -43,7 +52,11 @@ export default class Observer {
     this.lastUpdatedField = lastUpdatedField;
   }
 
-  /** Creates an Observer factory using the set Store. */
+  /**
+   * Creates an Observer factory that uses the custom store for storing last sync timestamps.
+   * @static
+   * @param {Store} store
+   */
   static createFactory(store) {
     if (!store instanceof AbstractStore) {
       throw Error('store is not an instance of AbstractStore');
@@ -55,33 +68,52 @@ export default class Observer {
     return new Observer(store, firestore, collectionRef, lastUpdatedField);
   }
 
-  /** @public */
+  /**
+   * @public
+   * @param {function} callback
+   */
   onCreated(callback) {
     this.events.on(Event.DOCUMENT_UPDATED, callback);
   }
 
-  /** @public */
+  /**
+   * @public
+   * @param {function} callback
+   */
   onUpdated(callback) {
     this.events.on(Event.DOCUMENT_UPDATED, callback);
   }
 
-  /** @public */
+  /**
+   * @public
+   * @param {function} callback
+   */
   onRemoved(callback) {
     this.events.on(Event.DOCUMENT_REMOVED, callback);
   }
 
-  /** @public */
+  /**
+   * Start observing a collection query.
+   * @public
+   * @async
+   */
   async connect() {
     const timestamp = await this.getLastSyncTimestamp();
     return this.addCollectionListener(timestamp);
   }
 
-  /** @public */
+  /**
+   * Stop observing a collection query.
+   * @public
+   */
   disconnect() {
     this.removeCollectionListener();
   }
 
-  /** @public */
+  /**
+   * Clears the last sync timestamp from storage.
+   * @public
+   */
   clearLastSyncTimestamp() {
     return this.store.remove(this.lastSyncStorageKey);
   }
