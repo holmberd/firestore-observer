@@ -118,7 +118,7 @@ export default class Observer {
     return this.store.remove(this.lastSyncStorageKey);
   }
 
-  async addCollectionListener(timestamp) {
+  addCollectionListener(timestamp) {
     if (this.unsubscribeToken) {
       console.warn('Listener is already subscribed.');
       return false;
