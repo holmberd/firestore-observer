@@ -18,7 +18,7 @@ Firestore Query Observer is a wrapper library for Firestore realtime collection 
 import firebase from 'firebase/app';
 import 'firebase/firestore';
 
-import fObserver from 'firestore-observer';
+import Observer from 'firestore-query-observer';
 
 firebase.initializeApp(firebaseConfig);
 
@@ -43,8 +43,8 @@ const newCities = [
     [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
   },
   {
-    name: 'San Francisco',
-    country: 'USA',
+    name: 'Vancouver',
+    country: 'Canada',
     [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
   },
 ];
@@ -60,9 +60,9 @@ await batch.commit();
 
 // Add a collection query listener.
 
-const cititesObserver = new Observer(firestore, citiesRef, LAST_UPDATED_FIELD,  CITIES_LAST_SYNC_KEY);
+const citiesObserver = new Observer(firestore, citiesRef, LAST_UPDATED_FIELD,  CITIES_LAST_SYNC_KEY);
 
-await cititiesObserver.connect(); // Start listening for changes.
+await citiesObserver.connect(); // Start listening for changes.
 
 citiesObserver.onCreated(city => console.log(`city ${city.name} created`));
 citiesObserver.onUpdated(city => console.log(`city ${city.name} updated`));
