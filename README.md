@@ -86,9 +86,9 @@ await osloCityRef.update({
   [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
 }); // console output: city Oslo removed
 
-cititiesObserver.disconnect(); // Stop listening for changes.
+citiesObserver.disconnect(); // Stop listening for changes.
 
-cititiesObserver.clearLastSyncTimestamp() // Clear last sync timestamp from storage.
+citiesObserver.clearLastSyncTimestamp() // Clear last sync timestamp from storage.
 ```
 
 ## API
