@@ -1,5 +1,6 @@
 import EventEmitter from './EventEmitter';
-import DefaultStore from './DefaultStore';
+import AbstractTimestampStore from './AbstractTimestampStore';
+import DefaultTimestampStore from './DefaultTimestampStore';
 
 const ChangeType = {
   ADDED: 'added',
@@ -16,16 +17,16 @@ const Event = {
 export default class Observer {
   unsubscribeToken = null;
 
-/**
- * @constructor
- * @param {Firestore} firestore
- * @param {CollectionReference} collectionRef
- * @param {string} lastUpdatedField - Document last updated field key.
- * @param {string} storeKey - Store key for last sync timestamp.
- * @param {Store} [store] - Last sync timestamp store instance, defaults to localstorage.
- * @returns {Observer}
- */
-  constructor(firestore, collectionRef, lastUpdatedField, storeKey, store = new DefaultStore(storeKey)) {
+  /**
+   * @constructor
+   * @param {Firestore} firestore
+   * @param {CollectionReference} collectionRef
+   * @param {string} lastUpdatedField - Document last updated field key.
+   * @param {string} storeKey - Store key for last sync timestamp.
+   * @param {TimestampStore} [store] - Last sync timestamp store instance, defaults to localstorage.
+   * @returns {Observer}
+   */
+  constructor(firestore, collectionRef, lastUpdatedField, storeKey, store = new DefaultTimestampStore(storeKey)) {
     this.store = store;
     this.events = new EventEmitter();
     this.firestore = firestore;
@@ -36,17 +37,17 @@ export default class Observer {
   /**
    * Creates an Observer factory that uses the custom store for storing last sync timestamps.
    * @static
-   * @param {Store} store
+   * @param {TimestampStore} store
    */
   static createFactory(store) {
-    if (!(store instanceof AbstractStore)) {
-      throw Error('store is not an instance of AbstractStore');
+    if (!(store instanceof AbstractTimestampStore)) {
+      throw Error('store is not an instance of TimestampStore');
     }
-    return (...args) => Observer.create(...args, store);
+    return (...args) => Observer.create(store, ...args);
   }
 
   static create(store, firestore, collectionRef, lastUpdatedField) {
-    return new Observer(store, firestore, collectionRef, lastUpdatedField);
+    return new Observer(firestore, collectionRef, lastUpdatedField, null, store);
   }
 
   /**
@@ -189,6 +190,6 @@ export default class Observer {
       return false;
     }
 
-    return this.store(timestamp);
+    return this.store(timestampData);
   }
 }
