@@ -1,6 +1,7 @@
-export default class AbstractStorage {
-  constructor(key) {
+export default class AbstractTimestampStore {
+  constructor(key, storage) {
     this.key = key;
+    this.storage = storage;
   }
 
   async get() {

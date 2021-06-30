@@ -1,10 +1,9 @@
-import AbstractStore from './AbstractStore';
+import AbstractTimestampStore from './AbstractTimestampStore';
 
 /* localstorage */
-export default class DefaultStore extends AbstractStore {
+export default class DefaultTimestampStore extends AbstractTimestampStore {
   constructor(key) {
-    super(key);
-    this.storage = window ? window.localStorage : null;
+    super(key, window ? window.localStorage : null);
   }
 
   async get() {
