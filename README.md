@@ -142,8 +142,19 @@ observer.onRemove(callback);
 observer.onCreate(callback);
 ```
 
-### Store
-Extend the AbstractStore to create custom Store instances which can be used in the observer factory to provide custom storage for the last sync timestamp instead of the DefaultStore(localstorage).
+### TimestampStore
+Extend the AbstractTimestampStore to create custom TimestampStore instances which can be used in the observer factory to provide custom storage for the last sync timestamp instead of the DefaultTimestampStore(localstorage).
+
+e.g.
+```js
+const lastSyncTimestampStore = new TimestampStore(LAST_SYNC_TIMESTAMP_STORAGE_KEY, storage);
+const observerFactory = Observer.createFactory(lastSyncTimestampStore);
+const observer = observerFactory.create(
+  firestore,
+  collectionRef,
+  LAST_MODIFIED_FIELD
+);
+```
 
 ## How it Works
 Normally when you add a Firestore realtime collection query listener, or if a listener is disconnected for more than 30 minutes,you are charged for a read for each document in that query.
