@@ -178,10 +178,17 @@ export default class Observer {
     return new this.firestore.Timestamp(seconds, nanoseconds).toDate();
   }
 
-  async updateLastSyncTimestamp(timestamp) {
-    if (!timestamp) {
-      throw Error('Missing required argument: timestamp');
+  async updateLastSyncTimestamp(timestampData) {
+    if (!timestampData || typeof timestampData !== 'object') {
+      throw Error('Missing or invalid timestamp data', timestampData);
     }
+    const lastSyncTimestamp = await this.getLastSyncTimestamp();
+    const { seconds, nanoseconds } = timestampData;
+    const newTimestamp = new this.firestore.Timestamp(seconds, nanoseconds);
+    if (newTimestamp <= lastSyncTimestamp) {
+      return false;
+    }
+
     return this.store(timestamp);
   }
 }
