@@ -48,15 +48,13 @@ const newCities = [
 
 
 const batch = db.batch();
+
 for (let city in newCities) {
   let newCityRef = db.collection('cities').doc();
-  batch.set(
-    newCityRef,
-    {
-      ...city,
-      [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp()
-    }
-  );
+  batch.set(newCityRef, {
+    ...city,
+    [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp()
+  });
 }
 
 await batch.commit();
@@ -149,14 +147,14 @@ Called when a document has been removed.
 - `callback` \<Function\>
 
 ### TimestampStore
-Extend the AbstractTimestampStore to create custom TimestampStore instances which can be used in the observer factory to provide custom storage for the last sync timestamp instead of the DefaultTimestampStore(localstorage).
+Extend the `AbstractTimestampStore` to create `TimestampStore` instances which can be used in the observer-factory to provide custom storage for the last sync timestamp.
 
 ## How it Works
-Normally when you add a Firestore realtime collection query listener, or if a listener is disconnected for more than 30 minutes,you are charged for a read for each document in that query.
+Normally when you add a Firestore realtime collection query listener, or if a listener is disconnected for more than 30 minutes, you are charged for a read for each document in that query when the listener is created.
 
 The Reason for this is because as the listener is added, it needs to read and fetch all the documents in the query so that it later can determine if a remote database update will trigger a local listener change event.
 
-This library helps reduce this issue by creating a query that only listens for documents in a collection that has changed since the last time the local client synced with the cloud database. And since the steps involved in setting this up is a pattern, this library and its API was added to make it easier to implement and re-use.
+This library helps reduce the number of reads by creating a query that only listens for documents in a collection that has changed since the last time the local client synced with the cloud database. Since the steps involved in setting this up is a reusable pattern, this library and its API was added to make it easier to implement and re-use.
 
 ![image](https://user-images.githubusercontent.com/13058304/123870532-4a44cd00-d8e7-11eb-99ea-22d9b9f13b95.png)
 
