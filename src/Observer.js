@@ -43,7 +43,11 @@ export default class Observer {
     if (!(store instanceof AbstractTimestampStore)) {
       throw Error('store is not an instance of TimestampStore');
     }
-    return (...args) => Observer.create(store, ...args);
+    return {
+      create(...args) {
+        return Observer.create(store, ...args);
+      }
+    }
   }
 
   static create(store, firestore, collectionRef, lastUpdatedField) {
@@ -55,7 +59,7 @@ export default class Observer {
    * @param {function} callback
    */
   onCreated(callback) {
-    this.events.on(Event.DOCUMENT_UPDATED, callback);
+    this.events.on(Event.DOCUMENT_CREATED, callback);
   }
 
   /**
@@ -121,15 +125,18 @@ export default class Observer {
 
   onQuerySnapshot(timestamp, callback, errorCallback) {
     return this.collectionRef
-      .where(this.lastUpdatedField, '>', timestamp)
+      .where(this.lastUpdatedField, '>', timestamp.toDate())
       .onSnapshot(callback, errorCallback);
   }
 
+  // Note: Listener doesn't return document "data" for documents created on the client.
+  // This is true even if `includeMetadataChanges: true` is set.
   async collectionListenerCallback(snapshot) {
     if (!snapshot) {
       throw Error('No snapshot in windows listener');
     }
 
+    // `hasPendingWrites` is only true for local writes.
     if (snapshot.metadata.hasPendingWrites) {
       return;
     }
@@ -145,18 +152,18 @@ export default class Observer {
 
       if (type === ADDED) {
         if (docData.isDeleted) {
-          this.events.emit(Event.DOCUMENT_REMOVED, docData);
+          this.events.emit(Event.DOCUMENT_REMOVED, doc);
           continue;
         }
-        this.events.emit(Event.DOCUMENT_CREATED, docData);
+        this.events.emit(Event.DOCUMENT_CREATED, doc);
       }
 
       if (type === MODIFIED) {
         if (docData.isDeleted) {
-          this.events.emit(Event.DOCUMENT_REMOVED, docData);
+          this.events.emit(Event.DOCUMENT_REMOVED, doc);
           continue;
         }
-        this.events.emit(Event.DOCUMENT_UPDATED, docData);
+        this.events.emit(Event.DOCUMENT_UPDATED, doc);
       }
     }
   }
@@ -171,12 +178,12 @@ export default class Observer {
   }
 
   async getLastSyncTimestamp() {
-    const data = this.store.get();
+    const data = await this.store.get();
     if (!data) {
-      return this.firestore.Timestamp.fromDate(new Date(1900, 1, 1));
+      return this.firestore.Timestamp.fromDate(new Date(1990, 1, 1));
     }
     const { seconds, nanoseconds } = data;
-    return new this.firestore.Timestamp(seconds, nanoseconds).toDate();
+    return new this.firestore.Timestamp(seconds, nanoseconds);
   }
 
   async updateLastSyncTimestamp(timestampData) {
@@ -190,6 +197,6 @@ export default class Observer {
       return false;
     }
 
-    return this.store(timestampData);
+    return this.store.set(timestampData);
   }
 }
