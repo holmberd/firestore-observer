@@ -101,7 +101,7 @@ citiesObserver.clearLastSyncTimestamp() // Clear last sync timestamp from storag
 
 ### `new Observer(firestore, collectionRef, lastUpdatedField, storeKey, store)`
 
-- `firestore` \<Firestore\>
+- `firestore` <span style="color:#43853d">\<Firestore\></span>
 - `collectionRef` \<CollectionReference\>
 - `lastUpdatedField` \<string\>
 - `storeKey` \<string\>
