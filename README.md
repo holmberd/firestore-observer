@@ -136,12 +136,12 @@ Called when a new document has been created.
 
 - `callback` \<Function\>
 
-### observer.onUpdate(callback)
+### `observer.onUpdate(callback)`
 Called when a document has been updated.
 
 - `callback` \<Function\>
 
-### observer.onRemove(callback)
+### `observer.onRemove(callback)`
 Called when a document has been removed.
 
 - `callback` \<Function\>
