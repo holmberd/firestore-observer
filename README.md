@@ -1,5 +1,5 @@
 # Firestore Query Observer
-Firestore Query Observer is a wrapper library for Firestore realtime collection query listeners. It provides an API for creating realtime collection query listeners optimized for document reads.
+Firestore Query Observer provides an API wrapper library for Firestore realtime listeners designed for easy creation of realtime collection query listeners optimized for document reads.
 
 ## Overview
 
