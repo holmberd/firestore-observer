@@ -113,15 +113,13 @@ Creates an Observer factory with a custom store for storing last sync timestamps
 
 - `firestore` \<Firestore\>
 - `store` \<TimestampStore\>
-- `collectionRef` \<CollectionReference\>
-- `lastUpdatedField` \<string\>
 - Returns: \<object\>
 
 Example Usage:
 ```js
 const lastSyncTimestampStore = new TimestampStore(LAST_SYNC_TIMESTAMP_STORAGE_KEY, storage);
-const observerFactory = Observer.createFactory(firestore, lastSyncTimestampStore, collectionRef, LAST_MODIFIED_FIELD);
-const observer = observerFactory.create();
+const observerFactory = Observer.createFactory(firestore, lastSyncTimestampStore);
+const observer = observerFactory.create(collectionRef, LAST_MODIFIED_FIELD);
 ```
 
 ### `observer.connect()`
