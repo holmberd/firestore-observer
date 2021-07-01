@@ -39,16 +39,18 @@ export default class Observer {
    * @static
    * @param {Firestore} firestore
    * @param {TimestampStore} store
+   * @param {CollectionReference} [collectionRef]
+   * @param {string} [lastUpdatedField]
    */
-  static createFactory(firestore, store) {
+  static createFactory(firestore, store, collectionRef, lastUpdatedField) {
     if (!(store instanceof AbstractTimestampStore)) {
       throw Error('store is not an instance of TimestampStore');
     }
     return {
-      create(...args) {
-        return Observer.create(firestore, store, ...args);
+      create(_collectionRef = collectionRef, _lastUpdatedField = lastUpdatedField) {
+        return Observer.create(firestore, store, _collectionRef, _lastUpdatedField);
       }
-    }
+    };
   }
 
   static create(firestore, store, collectionRef, lastUpdatedField) {

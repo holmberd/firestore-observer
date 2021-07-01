@@ -108,11 +108,13 @@ citiesObserver.clearLastSyncTimestamp() // Clear last sync timestamp from storag
 - `store` \<TimestampStore\> Optional TimestampStore, defaults to localstorage.
 - Returns: \<Observer\>
 
-### `Observer.createFactory(firestore, store)`
+### `Observer.createFactory(firestore, store, collectionRef, lastUpdatedField)`
 Creates an Observer factory with a custom store for storing last sync timestamps.
 
 - `firestore` \<Firestore\>
 - `store` \<TimestampStore\>
+- `collectionRef` \<CollectionReference\> Optional.
+- `lastUpdatedField` \<string\> Optional.
 - Returns: \<object\>
 
 Example Usage:
