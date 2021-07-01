@@ -108,17 +108,20 @@ citiesObserver.clearLastSyncTimestamp() // Clear last sync timestamp from storag
 - `store` \<TimestampStore\> Optional TimestampStore, defaults to localstorage.
 - Returns: \<Observer\>
 
-### `Observer.createFactory(store)`
+### `Observer.createFactory(firestore, store)`
 Creates an Observer factory with a custom store for storing last sync timestamps.
 
+- `firestore` \<Firestore\>
 - `store` \<TimestampStore\>
+- `collectionRef` \<CollectionReference\>
+- `lastUpdatedField` \<string\>
 - Returns: \<object\>
 
 Example Usage:
 ```js
-const observerFactory = Observer.createFactory(store);
-
-const observer = observerFactory.create(firestore, collectionRef, lastUpdatedField);
+const lastSyncTimestampStore = new TimestampStore(LAST_SYNC_TIMESTAMP_STORAGE_KEY, storage);
+const observerFactory = Observer.createFactory(firestore, lastSyncTimestampStore, collectionRef, LAST_MODIFIED_FIELD);
+const observer = observerFactory.create();
 ```
 
 ### `observer.connect()`
@@ -147,17 +150,6 @@ Called when a document has been removed.
 
 ### TimestampStore
 Extend the AbstractTimestampStore to create custom TimestampStore instances which can be used in the observer factory to provide custom storage for the last sync timestamp instead of the DefaultTimestampStore(localstorage).
-
-#### Example Usage:
-```js
-const lastSyncTimestampStore = new TimestampStore(LAST_SYNC_TIMESTAMP_STORAGE_KEY, storage);
-const observerFactory = Observer.createFactory(lastSyncTimestampStore);
-const observer = observerFactory.create(
-  firestore,
-  collectionRef,
-  LAST_MODIFIED_FIELD
-);
-```
 
 ## How it Works
 Normally when you add a Firestore realtime collection query listener, or if a listener is disconnected for more than 30 minutes,you are charged for a read for each document in that query.

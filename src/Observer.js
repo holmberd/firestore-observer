@@ -37,20 +37,23 @@ export default class Observer {
   /**
    * Creates an Observer factory that uses the custom store for storing last sync timestamps.
    * @static
+   * @param {Firestore} firestore
    * @param {TimestampStore} store
+   * @param {CollectionReference} collectionRef
+   * @param {string} lastUpdatedField
    */
-  static createFactory(store) {
+  static createFactory(firestore, store, collectionRef, lastUpdatedField) {
     if (!(store instanceof AbstractTimestampStore)) {
       throw Error('store is not an instance of TimestampStore');
     }
     return {
       create(...args) {
-        return Observer.create(store, ...args);
+        return Observer.create(firestore, store, collectionRef, lastUpdatedField);
       }
     }
   }
 
-  static create(store, firestore, collectionRef, lastUpdatedField) {
+  static create(firestore, store, collectionRef, lastUpdatedField) {
     return new Observer(firestore, collectionRef, lastUpdatedField, null, store);
   }
 
