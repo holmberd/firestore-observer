@@ -156,8 +156,7 @@ The Reason for this is because as the listener is added, it needs to read and fe
 
 This library helps reduce the number of reads by creating a query that only listens for documents in a collection that has changed since the last time the local client synced with the cloud database. Since the steps involved in setting this up is a reusable pattern, this library and its API was added to make it easier to implement and re-use.
 
-![image](https://user-images.githubusercontent.com/13058304/123870532-4a44cd00-d8e7-11eb-99ea-22d9b9f13b95.png)
-
+![image](https://user-images.githubusercontent.com/13058304/124199244-58c9ea80-da87-11eb-9d31-032b64fa1d3b.png)
 
 ## Considerations
 Currently if a document that is part of a listener query gets removed, it does not trigger a `DocumentChange` event in the local query listener. This requires us to update the `lastUpdated` field on the document and flag the document as deleted, e.g. `isDeleted`, to be able to trigger the change event.
