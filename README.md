@@ -29,31 +29,34 @@ const LAST_UPDATED_FIELD = 'updatedAt'; // Our collection documents last updated
 
 const citiesRef = db.collection('cities');
 
-// Add some citites to the collection.
+// Add citites to the collection.
 
 const newCities = [
   {
     name: 'Tokyo',
     country: 'Japan',
-    [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
   },
   {
     name: 'Stockholm',
     country: 'Sweden',
-    [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
   },
   {
     name: 'Vancouver',
     country: 'Canada',
-    [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
   },
 ];
 
-const batch = db.batch();
 
+const batch = db.batch();
 for (let city in newCities) {
   let newCityRef = db.collection('cities').doc();
-  batch.set(newCityRef, city);
+  batch.set(
+    newCityRef,
+    {
+      ...city,
+      [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp()
+    }
+  );
 }
 
 await batch.commit();
@@ -64,25 +67,28 @@ const citiesObserver = new Observer(firestore, citiesRef, LAST_UPDATED_FIELD,  C
 
 await citiesObserver.connect(); // Start listening for changes.
 
-citiesObserver.onCreated(city => console.log(`city ${city.name} created`));
-citiesObserver.onUpdated(city => console.log(`city ${city.name} updated`));
-citiesObserver.onRemoved(city => console.log(`city ${city.name} removed`));
+citiesObserver.onCreated(doc => console.log(`city ${doc.data().name} created`));
+citiesObserver.onUpdated(doc => console.log(`city ${doc.data().name} updated`));
+citiesObserver.onRemoved(doc => console.log(`city ${doc.data().name} removed`));
 
 const osloCityRef = citiesRef.doc();
 
+// Create
 await osloCityRef.set({
   name: 'Oslo',
   country: 'Norway',
   [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
 }); // console output: city Oslo created
 
+// Update
 await osloCityRef.update({
   capital: true,
   [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
 }); // console output: city Oslo updated
 
+// Delete
 await osloCityRef.update({
-  isDeleted: true,
+  isDeleted: true, // Required for the observer to detect deleted documents.
   [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
 }); // console output: city Oslo removed
 
@@ -93,59 +99,56 @@ citiesObserver.clearLastSyncTimestamp() // Clear last sync timestamp from storag
 
 ## API
 
-### Observer
-The Observer class is used to construct new listener query instances.
+### `new Observer(firestore, collectionRef, lastUpdatedField, storeKey, store)`
 
+- `firestore` \<Firestore\>
+- `collectionRef` \<CollectionReference\>
+- `lastUpdatedField` \<string\>
+- `storeKey` \<string\>
+- `store` \<TimestampStore\> Optional TimestampStore, defaults to localstorage.
+- Returns: \<Observer\>
+
+### `Observer.createFactory(store)`
+Creates an Observer factory with a custom store for storing last sync timestamps.
+
+- `store` \<TimestampStore\>
+- Returns: \<object\>
+
+Example Usage:
 ```js
-/**
- * @constructor
- * @param {Firestore} firestore
- * @param {CollectionReference} collectionRef
- * @param {string} lastUpdatedField - Document last updated field key.
- * @param {string} storeKey - Store key for last sync timestamp.
- * @param {Store} [store] - Last sync timestamp store instance, defaults to localstorage.
- * @returns {Observer}
- */
-const observer = new Observer(firestore, collectionRef, lastUpdatedField, storeKey);
-
-/**
- * Creates an Observer factory that uses the custom store for storing last sync timestamps.
- * @static
- * @param {Store} store
- */
 const observerFactory = Observer.createFactory(store);
 
-const observer = observerFactory(firestore, collectionRef, lastUpdatedField, storeKey);
-
-/* Observer Instance Methods */
-
-/**
- * Start observing the collection query.
- * @async
- */
-await observer.connect();
-
-/**
- * Stop observing the collection query.
- */
-observer.disconnect();
-
-/**
- * Clears the last sync timestamp.
- */
-observer.clearLastSyncTimestamp();
-
-/* DocumentChange event callbacks */
-observer.onCreate(callback);
-observer.onUpdate(callback);
-observer.onRemove(callback);
-observer.onCreate(callback);
+const observer = observerFactory.create(firestore, collectionRef, lastUpdatedField);
 ```
+
+### `observer.connect()`
+- Returns: \<Promise\>
+
+### `observer.disconnect()`
+Stop observing the collection query.
+
+### `observer.clearLastSyncTimestamp()`
+Clears the last sync timestamp.
+
+### `observer.onCreate(callback)`
+Called when a new document has been created.
+
+- `callback` \<Function\>
+
+### observer.onUpdate(callback)
+Called when a document has been updated.
+
+- `callback` \<Function\>
+
+### observer.onRemove(callback)
+Called when a document has been removed.
+
+- `callback` \<Function\>
 
 ### TimestampStore
 Extend the AbstractTimestampStore to create custom TimestampStore instances which can be used in the observer factory to provide custom storage for the last sync timestamp instead of the DefaultTimestampStore(localstorage).
 
-e.g.
+#### Example Usage:
 ```js
 const lastSyncTimestampStore = new TimestampStore(LAST_SYNC_TIMESTAMP_STORAGE_KEY, storage);
 const observerFactory = Observer.createFactory(lastSyncTimestampStore);
