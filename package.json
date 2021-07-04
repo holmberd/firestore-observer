@@ -1,14 +1,14 @@
 {
-  "name": "firestore-observer",
+  "name": "firestore-query-observer",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Firestore realtime collection query listeners API wrapper library for optimized realtime sync reads.",
+  "main": "./dist/bundle.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build":  "esbuild ./src --bundle --minify --outfile=./dist/bundle.js"
   },
   "author": "Dag Holmberg",
-  "license": "ISC",
+  "license": "BSD-2",
   "devDependencies": {
     "esbuild": "^0.12.12"
   }
