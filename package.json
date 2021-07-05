@@ -1,6 +1,6 @@
 {
   "name": "firestore-query-observer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Firestore realtime collection query listeners API wrapper library for optimized realtime sync reads.",
   "main": "dist/bundle.js",
   "scripts": {
