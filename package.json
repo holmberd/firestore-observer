@@ -9,6 +9,14 @@
   },
   "author": "Dag Holmberg",
   "license": "BSD-2",
+  "keywords": [
+    "firestore",
+    "observer",
+    "realtime",
+    "snapshot",
+    "listener",
+    "collection"
+  ],
   "devDependencies": {
     "esbuild": "^0.12.12"
   }
