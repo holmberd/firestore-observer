@@ -2,7 +2,7 @@
   "name": "firestore-query-observer",
   "version": "1.0.1",
   "description": "Firestore realtime collection query listeners API wrapper library for optimized realtime sync reads.",
-  "main": "./dist/bundle.js",
+  "main": "dist/bundle.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "esbuild ./src --bundle --minify --outfile=./dist/bundle.js"
