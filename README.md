@@ -159,9 +159,9 @@ This library helps reduce the number of reads by creating a query that only list
 ![image](https://user-images.githubusercontent.com/13058304/124199312-772fe600-da87-11eb-9760-b53101b11059.png)
 
 ## Considerations
-Currently if a document that is part of a listener query gets removed, it does not trigger a `DocumentChange` event in the local query listener. This requires us to update the `lastUpdated` field on the document and flag the document as deleted, e.g. `isDeleted`, to be able to trigger the change event.
+Rmoving an observed document does not trigger a `DocumentChange` event in the local query listener. This requires us to update the `lastUpdated` field on the document and flag the document as deleted, i.e. `isDeleted`, to be able to detect the change.
 
-Normally Firestore doesn't charge for removals in query listeners since it doesn't need to read and fetch any data. But because we need to update the document we are charged for an extra read. This is worth considering if your collection only holds a small amount of documents and you are creating and removing documents constantly.
+Normally Firestore doesn't charge for removals in query listeners since it doesn't need to read and fetch the document data. But because we need to update the document we are charged for an extra write and read. This is worth considering if your collection only holds a small amount of documents and you are creating and removing documents at a high pace.
 
 ## License
 See the LICENSE file.
