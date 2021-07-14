@@ -1,15 +1,15 @@
  export default class EventEmitter {
   constructor() {
-    this._events = {};
-    this._counter = 0;
+    this.events = {};
+    this.counter = 0;
   }
 
   on(event, listener) {
-    if (!this._events[event]) {
-      this._events[event] = [];
+    if (!this.events[event]) {
+      this.events[event] = [];
     }
-    const token = this._counter++;
-    this._events[event].push({
+    const token = this.counter++;
+    this.events[event].push({
       listener: listener,
       token: token,
     });
@@ -17,19 +17,19 @@
   }
 
   emit(event, ...args) {
-    if (!this._events[event]) {
+    if (!this.events[event]) {
       return false;
     }
-    this._events[event].forEach((e) => e.listener(...args));
+    this.events[event].forEach((e) => e.listener(...args));
     return true;
   }
 
   removeListener(event, token) {
-    if (this._events[event]) {
+    if (this.events[event]) {
       if (token) {
-        const index = this._events[event].findIndex((e) => e.token === token);
+        const index = this.events[event].findIndex((e) => e.token === token);
         if (index > -1) {
-          this._events[event].splice(index, 1);
+          this.events[event].splice(index, 1);
           return true;
         }
       }
@@ -38,8 +38,8 @@
   }
 
   removeAllListeners(event) {
-    if (this._events[event]) {
-      delete this._events[event];
+    if (this.events[event]) {
+      delete this.events[event];
       return true;
     }
     return false;
