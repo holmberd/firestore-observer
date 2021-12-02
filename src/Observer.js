@@ -1,3 +1,5 @@
+import { query, where, onSnapshot, Timestamp } from 'firebase/firestore';
+
 import EventEmitter from './EventEmitter';
 import AbstractTimestampStore from './AbstractTimestampStore';
 import DefaultTimestampStore from './DefaultTimestampStore';
@@ -18,18 +20,15 @@ export default class Observer {
   unsubscribeToken = null;
 
   /**
-   * @constructor
-   * @param {Firestore} firestore
    * @param {CollectionReference} collectionRef
    * @param {string} lastUpdatedField - Document last updated field key.
    * @param {string} storeKey - Store key for last sync timestamp.
    * @param {TimestampStore} [store] - Last sync timestamp store instance, defaults to localstorage.
    * @returns {Observer}
    */
-  constructor(firestore, collectionRef, lastUpdatedField, storeKey, store = new DefaultTimestampStore(storeKey)) {
+  constructor(collectionRef, lastUpdatedField, storeKey, store = new DefaultTimestampStore(storeKey)) {
     this.store = store;
     this.events = new EventEmitter();
-    this.firestore = firestore;
     this.collectionRef = collectionRef;
     this.lastUpdatedField = lastUpdatedField;
   }
@@ -37,24 +36,24 @@ export default class Observer {
   /**
    * Creates an Observer factory that uses the custom store for storing last sync timestamps.
    * @static
-   * @param {Firestore} firestore
+   * *
    * @param {TimestampStore} store
    * @param {CollectionReference} [collectionRef]
    * @param {string} [lastUpdatedField]
    */
-  static createFactory(firestore, store, collectionRef, lastUpdatedField) {
+  static createFactory(store, collectionRef, lastUpdatedField) {
     if (!(store instanceof AbstractTimestampStore)) {
       throw Error('store is not an instance of TimestampStore');
     }
     return {
       create(_collectionRef = collectionRef, _lastUpdatedField = lastUpdatedField) {
-        return Observer.create(firestore, store, _collectionRef, _lastUpdatedField);
-      }
+        return Observer.create(store, _collectionRef, _lastUpdatedField);
+      },
     };
   }
 
-  static create(firestore, store, collectionRef, lastUpdatedField) {
-    return new Observer(firestore, collectionRef, lastUpdatedField, null, store);
+  static create(store, collectionRef, lastUpdatedField) {
+    return new Observer(collectionRef, lastUpdatedField, null, store);
   }
 
   /**
@@ -90,7 +89,7 @@ export default class Observer {
     const timestamp = await this.getLastSyncTimestamp();
 
     //  If an error occrus the listener will not receive any more events.
-    return this.addQueryListener(timestamp, err => {
+    return this.addQueryListener(timestamp, (err) => {
       throw err;
     });
   }
@@ -116,30 +115,36 @@ export default class Observer {
       console.warn('Listener is already subscribed.');
       return false;
     }
-    this.unsubscribeToken = this.onQuerySnapshot(timestamp, async (snapshot) => {
-      try {
-        await this.collectionListenerCallback(snapshot);
-      } catch(err) {
-        return errorCallback(err);
-      }
-    }, errorCallback);
+    this.unsubscribeToken = this.onQuerySnapshot(
+      timestamp,
+      async (snapshot) => {
+        try {
+          await this.collectionListenerCallback(snapshot);
+        } catch (err) {
+          return errorCallback(err);
+        }
+      },
+      errorCallback
+    );
     return this.unsubscribeToken;
   }
 
   onQuerySnapshot(timestamp, callback, errorCallback) {
-    return this.collectionRef
-      .where(this.lastUpdatedField, '>', timestamp.toDate())
-      .onSnapshot(callback, errorCallback);
+    return onSnapshot(
+      query(
+        this.collectionRef,
+        where(this.lastUpdatedField, '>', timestamp.toDate()),
+      ),
+      callback,
+      errorCallback
+    );
   }
 
-  // Note: Listener doesn't return document "data" for documents created on the client.
-  // This is true even if `includeMetadataChanges: true` is set.
   async collectionListenerCallback(snapshot) {
     if (!snapshot) {
       throw Error('No snapshot in windows listener');
     }
 
-    // `hasPendingWrites` is only true for local writes.
     if (snapshot.metadata.hasPendingWrites) {
       return;
     }
@@ -183,10 +188,10 @@ export default class Observer {
   async getLastSyncTimestamp() {
     const data = await this.store.get();
     if (!data) {
-      return this.firestore.Timestamp.fromDate(new Date(1990, 1, 1));
+      return Timestamp.fromDate(new Date(1990, 1, 1));
     }
     const { seconds, nanoseconds } = data;
-    return new this.firestore.Timestamp(seconds, nanoseconds);
+    return new Timestamp(seconds, nanoseconds);
   }
 
   async updateLastSyncTimestamp(timestampData) {
@@ -195,7 +200,7 @@ export default class Observer {
     }
     const lastSyncTimestamp = await this.getLastSyncTimestamp();
     const { seconds, nanoseconds } = timestampData;
-    const newTimestamp = new this.firestore.Timestamp(seconds, nanoseconds);
+    const newTimestamp = new Timestamp(seconds, nanoseconds);
     if (newTimestamp <= lastSyncTimestamp) {
       return false;
     }

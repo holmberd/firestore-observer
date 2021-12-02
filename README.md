@@ -16,18 +16,25 @@ Firestore Query Observer provides an API wrapper library for Firestore realtime 
 
 ```js
 import firebase from 'firebase/app';
-import 'firebase/firestore';
+import {
+  getFirestore,
+  serverTimestamp,
+  collection,
+  writeBatch,
+  doc,
+  setDoc,
+  updateDoc,
+} from 'firebase/firestore';
 
 import Observer from 'firestore-query-observer';
 
 firebase.initializeApp(firebaseConfig);
 
-const db = firebase();
-
 const CITIES_LAST_SYNC_KEY = 'citites-last-sync'; // Last sync timestamp storage key.
 const LAST_UPDATED_FIELD = 'updatedAt'; // Our collection documents last updated field key.
 
-const citiesRef = db.collection('cities');
+const db = getFirestore();
+const citiesRef = collection(db, 'cities');
 
 // Add citites to the collection.
 
@@ -47,13 +54,13 @@ const newCities = [
 ];
 
 
-const batch = db.batch();
+const batch = writeBatch(db);
 
 for (let city in newCities) {
   let newCityRef = db.collection('cities').doc();
   batch.set(newCityRef, {
     ...city,
-    [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp()
+    [LAST_UPDATED_FIELD]: serverTimestamp()
   });
 }
 
@@ -61,7 +68,7 @@ await batch.commit();
 
 // Add a collection query listener.
 
-const citiesObserver = new Observer(firestore, citiesRef, LAST_UPDATED_FIELD,  CITIES_LAST_SYNC_KEY);
+const citiesObserver = new Observer(citiesRef, LAST_UPDATED_FIELD,  CITIES_LAST_SYNC_KEY);
 
 await citiesObserver.connect(); // Start listening for changes.
 
@@ -69,26 +76,29 @@ citiesObserver.onCreated(doc => console.log(`city ${doc.data().name} created`));
 citiesObserver.onUpdated(doc => console.log(`city ${doc.data().name} updated`));
 citiesObserver.onRemoved(doc => console.log(`city ${doc.data().name} removed`));
 
-const osloCityRef = citiesRef.doc();
+const osloCityRef = doc(citiesRef);
 
 // Create
-await osloCityRef.set({
+await setDoc(osloCityRef, {
   name: 'Oslo',
   country: 'Norway',
-  [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
-}); // console output: city Oslo created
+  [LAST_UPDATED_FIELD]: serverTimestamp(),
+});
+// >> city Oslo created
 
 // Update
-await osloCityRef.update({
+await updateDoc(osloCityRef, {
   capital: true,
-  [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
-}); // console output: city Oslo updated
+  [LAST_UPDATED_FIELD]: serverTimestamp(),
+});
+// >> city Oslo updated
 
 // Delete
-await osloCityRef.update({
+await updateDoc(osloCityRef, {
   isDeleted: true, // Required for the observer to detect deleted documents.
-  [LAST_UPDATED_FIELD]: firestore.FieldValue.serverTimestamp(),
-}); // console output: city Oslo removed
+  [LAST_UPDATED_FIELD]: serverTimestamp(),
+});
+// >> city Oslo removed
 
 citiesObserver.disconnect(); // Stop listening for changes.
 
@@ -97,19 +107,17 @@ citiesObserver.clearLastSyncTimestamp() // Clear last sync timestamp from storag
 
 ## API
 
-### `new Observer(firestore, collectionRef, lastUpdatedField, storeKey, store)`
+### `new Observer(collectionRef, lastUpdatedField, storeKey, store)`
 
-- `firestore` \<Firestore\>
 - `collectionRef` \<CollectionReference\>
 - `lastUpdatedField` \<string\>
 - `storeKey` \<string\>
 - `store` \<TimestampStore\> Optional TimestampStore, defaults to localstorage.
 - Returns: \<Observer\>
 
-### `Observer.createFactory(firestore, store, collectionRef, lastUpdatedField)`
+### `Observer.createFactory(store, collectionRef, lastUpdatedField)`
 Creates an Observer factory with a custom store for storing last sync timestamps.
 
-- `firestore` \<Firestore\>
 - `store` \<TimestampStore\>
 - `collectionRef` \<CollectionReference\> Optional.
 - `lastUpdatedField` \<string\> Optional.
@@ -118,7 +126,7 @@ Creates an Observer factory with a custom store for storing last sync timestamps
 Example Usage:
 ```js
 const lastSyncTimestampStore = new TimestampStore(LAST_SYNC_TIMESTAMP_STORAGE_KEY, storage);
-const observerFactory = Observer.createFactory(firestore, lastSyncTimestampStore);
+const observerFactory = Observer.createFactory(lastSyncTimestampStore);
 const observer = observerFactory.create(collectionRef, LAST_MODIFIED_FIELD);
 ```
 
