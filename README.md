@@ -158,11 +158,9 @@ Called when a document has been removed.
 Extend the `AbstractTimestampStore` to create `TimestampStore` instances which can be used in the observer-factory to provide custom storage for the last sync timestamp.
 
 ## How it Works
-When you add a Firestore realtime collection query listener, or if a listener is disconnected for more than 30 minutes, you are charged for a read for each document in that query when the listener is created.
+When you add a Firestore realtime collection query listener, or if a listener is disconnected for more than 30 minutes, you are charged for a read for each document in that query when the listener is created. The reason for this behaviour is because it needs to read all the documents in the query so that it later can determine if a remote database update will trigger a local listener change event.
 
-The Reason for this is because it needs to read and fetch all the documents in the query so that it later can determine if a remote database update will trigger a local listener change event.
-
-This library helps reduce the number of reads by creating a query that only listens for documents in a collection that has changed since the last time the local client synced with the cloud database. Since the steps involved in setting this up is a reusable pattern, this library and its API was added to make it easier to implement and re-use.
+This library helps reduce the number of reads by creating a query that only listens for documents in a collection that has changed since the last time the local client synced with the cloud database. And since the steps involved in setting this up is a reusable pattern, this library and its API was added to make it easier to implement and re-use.
 
 ![image](https://user-images.githubusercontent.com/13058304/124199312-772fe600-da87-11eb-9760-b53101b11059.png)
 
